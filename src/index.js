@@ -126,7 +126,7 @@ app.put('/destinos/:id', async (req, res) => {
 });
 
 // Ruta POST /destinos para agregar un nuevo destino
-app.post('/destinos', async (req, res) => {
+app.post('/destinos/p', async (req, res) => {
     const { nombre, pais, descripcion, precio } = req.body;
     try {
         const connection = await database.getConnection();
