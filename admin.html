@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin</title>
+</head>
+<body>
+    <h1>Página de Admin</h1>
+    <h2>Gestión de Destinos</h2>
+
+    <form id="destinationForm">
+        <input type="hidden" id="id_destino" placeholder="ID">
+        <input type="text" id="nombre" placeholder="Nombre" required>
+        <input type="text" id="pais" placeholder="País" required>
+        <input type="text" id="descripcion" placeholder="Descripción" required>
+        <input type="number" id="precio" placeholder="Precio" required>
+        <button type="submit">Agregar/Actualizar Destino</button>
+    </form>
+    <div id="message"></div>
+
+    <h3>Destinos Existentes</h3>
+    <ul id="destinosList"></ul>
+
+    <script>
+        const destinationForm = document.getElementById('destinationForm');
+        const destinosList = document.getElementById('destinosList');
+        const messageDiv = document.getElementById('message');
+
+        // Función para cargar destinos
+        async function loadDestinos() {
+            const response = await fetch('/destinos');
+            const destinos = await response.json();
+            destinosList.innerHTML = '';
+
+            destinos.forEach(destino => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    ${destino.nombre} (${destino.pais}) 
+                    <button onclick="editDestino(${destino.id_destino})">Editar</button>
+                    <button onclick="deleteDestino(${destino.id_destino})">Eliminar</button>
+                `;
+                destinosList.appendChild(li);
+            });
+        }
+
+        // Función para editar un destino
+        function editDestino(id) {
+            fetch(`/destinos/${id}`)
+                .then(response => response.json())
+                .then(destino => {
+                    document.getElementById('id_destino').value = destino.id_destino;
+                    document.getElementById('nombre').value = destino.nombre;
+                    document.getElementById('pais').value = destino.pais;
+                    document.getElementById('descripcion').value = destino.descripcion;
+                    document.getElementById('precio').value = destino.precio;
+                });
+        }
+
+        // Función para eliminar un destino
+        async function deleteDestino(id) {
+            const response = await fetch(`/destinos/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                messageDiv.innerText = 'Destino eliminado correctamente';
+                loadDestinos();
+            } else {
+                messageDiv.innerText = 'Error al eliminar destino';
+            }
+        }
+
+        // Manejar el envío del formulario
+        destinationForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('id_destino').value;
+            const nombre = document.getElementById('nombre').value;
+            const pais = document.getElementById('pais').value;
+            const descripcion = document.getElementById('descripcion').value;
+            const precio = document.getElementById('precio').value;
+
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `/destinos/${id}` : '/destinos';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ nombre, pais, descripcion, precio })
+            });
+
+            const data = await response.json();
+            messageDiv.innerText = data.message || 'Operación realizada';
+            loadDestinos();
+            destinationForm.reset();
+        });
+
+        // Cargar destinos al inicio
+        loadDestinos();
+    </script>
+</body>
+</html>
